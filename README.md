@@ -47,25 +47,4 @@ introduces new variable `thirdpersonzoom`. The variable works only
 when `thirdpersoncursor` is `0` and when set it prevents Red Eclipse
 from switching to first person for zooming from third person.
 
-Known to work with 4f465af
-
-## Limit number of players in duel and survivor / duelmaxqueued.patch
-
-This patch introduces two new variables `duelmaxqueued` and
-`survivormaxqueued`. They limit the length of duel and survivor queue
-respectively. This allows to prevent duels and survivors to grow
-uncontrollably because of random people joining.
-
-This patch is a backport of code present in master branch.
-
-Known to work with 4f465af
-
-## Fix irc relay colours / fix_ircfilter.patch
-
-IRC code in Red Eclipse does not handle `end colour formatting` character
-properly with `ircfilter 1`. Which leads to ugly `E` characters when
-colors are used in IRC. This patch fixes it.
-
-This patch is a backport of code present in master branch.
-
-Known to work with 4f465af
+Known to work with 630847a
