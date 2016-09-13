@@ -47,4 +47,4 @@ introduces new variable `thirdpersonzoom`. The variable works only
 when `thirdpersoncursor` is `0` and when set it prevents Red Eclipse
 from switching to first person for zooming from third person.
 
-Known to work with 630847a
+Known to work with 439365b (v1.5.6)
