@@ -48,3 +48,9 @@ when `thirdpersoncursor` is `0` and when set it prevents Red Eclipse
 from switching to first person for zooming from third person.
 
 Known to work with 439365b (v1.5.6)
+
+## Fix [issue #581](https://github.com/red-eclipse/base/issues/581)
+
+Temporary fix for the issue.
+
+Known to work with 439365b.
