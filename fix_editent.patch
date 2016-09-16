@@ -1,5 +1,5 @@
 diff --git a/src/game/server.cpp b/src/game/server.cpp
-index 63d3de2..811ff49 100644
+index 63d3de2..219acce 100644
 --- a/src/game/server.cpp
 +++ b/src/game/server.cpp
 @@ -7012,8 +7012,6 @@ namespace server
@@ -11,15 +11,17 @@ index 63d3de2..811ff49 100644
                          putint(q, N_EDITENT);
                          putint(q, n);
                          putint(q, o.x);
-@@ -7022,6 +7020,11 @@ namespace server
+@@ -7022,7 +7020,12 @@ namespace server
                          putint(q, sents[n].type);
                          putint(q, sents[n].attrs.length());
                          loopvk(sents[n].attrs) putint(q, sents[n].attrs[k]);
+-                        sendpacket(-1, 1, q.finalize(), ci->clientnum);
 +                        packetbuf cep(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
 +                        putint(cep, N_CLIENT);
 +                        putint(cep, ci->clientnum);
 +                        putuint(cep, q.length());
 +                        cep.put(q.getbuf(), q.length());
-                         sendpacket(-1, 1, q.finalize(), ci->clientnum);
++                        sendpacket(-1, 1, cep.finalize(), ci->clientnum);
                          if(tweaked)
                          {
+                             if(enttype[sents[n].type].usetype == EU_ITEM) setspawn(n, true, true, true);
