@@ -47,10 +47,13 @@ introduces new variable `thirdpersonzoom`. The variable works only
 when `thirdpersoncursor` is `0` and when set it prevents Red Eclipse
 from switching to first person for zooming from third person.
 
-Known to work with 439365b (v1.5.6)
+Known to work with 89e1555 (v1.5.6)
 
-## Fix [issue #581](https://github.com/red-eclipse/base/issues/581)
+## Coop editing / mppaste.patch
 
-Temporary fix for the issue.
+Client+server patch. Patched client on a patched server will be able
+to paste unknown geometry (pieces of other maps, prefabs) in coop
+editing games. Doesn't break protocol, so non-patched clients will see
+the pasted geometry too.
 
-Known to work with 439365b.
+Known to work with 89e1555 (v1.5.6)
