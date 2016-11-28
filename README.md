@@ -47,7 +47,7 @@ introduces new variable `thirdpersonzoom`. The variable works only
 when `thirdpersoncursor` is `0` and when set it prevents Red Eclipse
 from switching to first person for zooming from third person.
 
-Known to work with 89e1555 (v1.5.6)
+Known to work with 992c20f (v1.5.6)
 
 ## Coop editing / mppaste.patch
 
@@ -56,4 +56,15 @@ to paste unknown geometry (pieces of other maps, prefabs) in coop
 editing games. Doesn't break protocol, so non-patched clients will see
 the pasted geometry too.
 
-Known to work with 89e1555 (v1.5.6)
+Known to work with 992c20f (v1.5.6)
+
+## Server sort by priority / prio_sort.patch
+
+Client side patch. Adds `priority` option to the list of attributes
+available to sort servers by. In unpatched client servers with
+higher priority are always shown at the top, often leading to a bunch
+of empty servers preceeding servers with players when one sorts by a
+number of players. Also adds priority indication for each server in
+the server browser.
+
+Known to work with 992c20f (v1.5.6)
