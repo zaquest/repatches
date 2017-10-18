@@ -47,4 +47,25 @@ introduces new variable `thirdpersonzoom`. The variable works only
 when `thirdpersoncursor` is `0` and when set it prevents Red Eclipse
 from switching to first person for zooming from third person.
 
-Known to work with 4c6631a (v1.5.6)
+Known to work with 6e63e965 (v1.5.8)
+
+## Fix build broken by `gamma` name hack / fix_gamma.patch
+
+Backport of [b16b496](https://github.com/red-eclipse/base/commit/b16b4963c1ad81bb9ef784bc4913a4c8ab5f1bb4)
+to stable.
+
+Known to work with 6e63e965 (v1.5.8)
+
+## Fix soft particles flickering in fog [#728](https://github.com/red-eclipse/base/issues/728) / fix_particles_in_fog.patch
+
+Backport of [#730](https://github.com/red-eclipse/base/pull/730) to
+stable.
+
+Known to work with 6e63e965 (v1.5.8)
+
+## Fix clip/wallrun bug [#221](https://github.com/red-eclipse/base/issues/221) / fix_clip_collision.patch
+
+Backport of [#731](https://github.com/red-eclipse/base/pull/731) to
+stable.
+
+Known to work with 6e63e965 (v1.5.8)

@@ -1,0 +1,42 @@
+diff --git a/src/engine/main.cpp b/src/engine/main.cpp
+index 8175ac5..1c070c2 100644
+--- a/src/engine/main.cpp
++++ b/src/engine/main.cpp
+@@ -277,10 +277,10 @@ static void setgamma(int val)
+ }
+ 
+ static int curgamma = 100;
+-VARF(IDF_PERSIST, gamma, 30, 100, 300,
++VARFN(IDF_PERSIST, gamma, reqgamma, 30, 100, 300,
+ {
+-    if(initing || gamma == curgamma) return;
+-    curgamma = gamma;
++    if(initing || reqgamma == curgamma) return;
++    curgamma = reqgamma;
+     setgamma(curgamma);
+ });
+ 
+diff --git a/src/shared/cube.h b/src/shared/cube.h
+index 3864c49..7ff5e26 100644
+--- a/src/shared/cube.h
++++ b/src/shared/cube.h
+@@ -3,19 +3,11 @@
+ 
+ #define _FILE_OFFSET_BITS 64
+ 
+-#ifdef __GNUC__
+-#define gamma __gamma
+-#endif
+-
+ #ifdef WIN32
+ #define _USE_MATH_DEFINES
+ #endif
+ #include <math.h>
+ 
+-#ifdef __GNUC__
+-#undef gamma
+-#endif
+-
+ #include <string.h>
+ #include <stdio.h>
+ #include <stdlib.h>

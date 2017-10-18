@@ -1,0 +1,180 @@
+diff --git a/src/engine/octa.cpp b/src/engine/octa.cpp
+index dab30a43..526c456b 100644
+--- a/src/engine/octa.cpp
++++ b/src/engine/octa.cpp
+@@ -1201,6 +1201,8 @@ int genclipplane(const cube &c, int orient, vec *v, plane *clip)
+     return planes;
+ }
+ 
++bool collideface(const cube &c, const int orient, const ivec &co, const int size);
++
+ void genclipplanes(const cube &c, const ivec &co, int size, clipplanes &p, bool collide)
+ {
+     // generate tight bounding box
+@@ -1223,7 +1225,15 @@ void genclipplanes(const cube &c, const ivec &co, int size, clipplanes &p, bool
+         loopi(6) if(c.visible&(1<<i))
+         {
+             int vis;
+-            if(flataxisface(c, i)) p.visible |= 1<<i;
++            if(flataxisface(c, i))
++            {
++                if(touchingface(c, i))
++                {
++                    if(faceedges(c, i)==F_SOLID) p.visible |= collidesolidface(c, i, co, size)<<i;
++                    else p.visible |= collideface(c, i, co, size)<<i;
++                }
++                else p.visible |= 1<<i;
++            }
+             else if((vis = visibletris(c, i, co, size, MAT_NOCLIP, MATF_CLIP)))
+             {
+                 int convex = faceconvexity(c, i), order = vis&4 || convex < 0 ? 1 : 0;
+@@ -1878,3 +1888,101 @@ void calcmerges()
+     genmerges();
+ }
+ 
++inline bool solidmat(const int mat)
++{
++    return ((mat&MATF_CLIP) == MAT_CLIP) || ((mat&MATF_VOLUME) == MAT_GLASS);
++}
++
++inline bool solidface(const cube &c, int orient)
++{
++    return (solidmat(c.material) || ((faceedges(c, orient) == F_SOLID) && touchingface(c, orient))) && (c.material&MATF_CLIP) != MAT_NOCLIP;
++}
++
++inline bool occludescollide(const cube &o, const int norient, const ivec &no, int nsize, const ivec &co, const int size, const ivec2 *cf, const int numc)
++{
++    int dim = dimension(norient);
++    if(!o.children)
++    {
++         if(solidface(o, norient)) return true;
++         ivec2 vf[8];
++         int numv = clipfacevecs(cf, numc, no[C[dim]], no[R[dim]], nsize, vf);
++         if(numv < 3) return true;
++         if(isempty(o) || notouchingface(o, norient)) return false;
++         ivec2 of[4];
++         int numo = genfacevecs(o, norient, no, nsize, false, of);
++         return numo >= 3 && insideface(vf, numv, of, numo);
++    }
++
++    nsize >>= 1;
++    int coord = dimcoord(norient);
++    loopi(8) if(octacoord(dim, i) == coord)
++    {
++        if(!occludescollide(o.children[i], norient, ivec(i, no, nsize), nsize, co, size, cf, numc)) return false;
++    }
++
++    return true;
++}
++
++bool collideface(const cube &c, const int orient, const ivec &co, const int size)
++{
++    if(!solidmat(c.material) && !touchingface(c, orient)) return true;
++    ivec no;
++    int nsize;
++    const cube &o = neighbourcube(c, orient, co, size, no, nsize);
++    if(&o==&c) return false;
++    const int norient = opposite(orient);
++    if(nsize > size || (nsize == size && !o.children))
++    {
++        if((isempty(o) && !solidmat(o.material)) || (o.material&MATF_CLIP)==MAT_NOCLIP) return true;
++        if(!solidmat(o.material) && notouchingface(o, norient)) return true;
++        const bool solid = solidface(c, orient);
++        const bool nsolid = solidface(o, norient);
++        if(nsolid && (solid || touchingface(c, orient))) return false;
++
++        ivec vo = ivec(co).mask(0xFFF);
++        no.mask(0xFFF);
++        ivec2 cf[4], of[4];
++        int numc = genfacevecs(c, orient, vo, size, solid, cf),
++            numo = genfacevecs(o, norient, no, nsize, nsolid, of);
++        return numo < 3 || !insideface(cf, numc, of, numo);
++    }
++    ivec vo = ivec(co).mask(0xFFF);
++    no.mask(0xFFF);
++    ivec2 cf[4];
++    int numc = genfacevecs(c, orient, vo, size, solidface(c, orient), cf);
++    return !occludescollide(o, norient, no, nsize, vo, size, cf, numc);
++}
++
++inline bool occludescollidesolid(const cube &c, const int orient, const ivec &co, int size)
++{
++    if(!c.children) return solidface(c, orient);
++    size >>= 1;
++    int dim = dimension(orient), coord = dimcoord(orient);
++    loopi(8) if(octacoord(dim, i) == coord)
++    {
++        if(!occludescollidesolid(c.children[i], orient, ivec(i, co, size), size)) return false;
++    }
++    return true;
++}
++
++bool collidesolidface(const cube &c, const int orient, const ivec &co, const int size)
++{
++    ivec no;
++    int nsize;
++    const cube &o = neighbourcube(c, orient, co, size, no, nsize);
++    if(&o == &c) return false;
++    const int norient = opposite(orient);
++    if(nsize > size || (nsize == size && !o.children))
++    {
++        if(solidface(o, norient)) return false;
++        else if(nsize == size && !o.children) return true;
++        if((o.material&MATF_CLIP) == MAT_NOCLIP) return true;
++        ivec vo = ivec(co).mask(0xFFF);
++        no.mask(0xFFF);
++        ivec2 cf[4] = {{0,0},{0,0},{0,0},{0,0}}, of[4];
++        int numc = genfacevecs(c, orient, vo, size, true, cf),
++            numo = genfacevecs(o, norient, no, nsize, false, of);
++        return numo < 3 || !insideface(cf, numc, of, numo);
++    }
++    return !occludescollidesolid(o, opposite(orient), no, nsize);
++}
+diff --git a/src/engine/octa.h b/src/engine/octa.h
+index 291a4ff2..dd405806 100644
+--- a/src/engine/octa.h
++++ b/src/engine/octa.h
+@@ -339,3 +339,4 @@ enum
+     GENFACEVERTSXY(x0,x1, y0,y1, z0,z1, c0,c1, r0,r1, d0,d1) \
+     GENFACEVERTSZ(x0,x1, y0,y1, z0,z1, c0,c1, r0,r1, d0,d1)
+ 
++extern bool collidesolidface(const cube &c, const int orient, const ivec &co, const int size);
+diff --git a/src/engine/physics.cpp b/src/engine/physics.cpp
+index 0bcbec48..0a62817d 100644
+--- a/src/engine/physics.cpp
++++ b/src/engine/physics.cpp
+@@ -926,6 +926,12 @@ static bool fuzzycollidesolid(physent *d, const vec &dir, float cutoff, const cu
+     collidewall = vec(0, 0, 0);
+     float bestdist = -1e10f;
+     int visible = isentirelysolid(c) ? c.visible : 0xFF;
++    if(d->type<ENT_CAMERA)
++    {
++        int collide = 0;
++        loopi(6) if((visible>>i)&1) collide |= collidesolidface(c, i, co, size) << i;
++        visible = collide;
++    }
+     #define CHECKSIDE(side, distval, dotval, margin, normal) if(visible&(1<<side)) do \
+     { \
+         float dist = distval; \
+@@ -1047,6 +1053,12 @@ static bool cubecollidesolid(physent *d, const vec &dir, float cutoff, const cub
+     collidewall = vec(0, 0, 0);
+     float bestdist = -1e10f;
+     int visible = isentirelysolid(c) ? c.visible : 0xFF;
++    if(d->type<ENT_CAMERA)
++    {
++        int collide = 0;
++        loopi(6) if((visible>>i)&1) collide |= collidesolidface(c, i, co, size) << i;
++        visible = collide;
++    }
+     CHECKSIDE(O_LEFT, co.x - entvol.right(), -dir.x, -d->radius, vec(-1, 0, 0));
+     CHECKSIDE(O_RIGHT, entvol.left() - (co.x + size), dir.x, -d->radius, vec(1, 0, 0));
+     CHECKSIDE(O_BACK, co.y - entvol.front(), -dir.y, -d->radius, vec(0, -1, 0));
+@@ -1193,7 +1205,7 @@ bool collide(physent *d, const vec &dir, float cutoff, bool playercol, bool insi
+     collidewall = vec(0, 0, 0);
+     ivec bo(int(d->o.x-d->radius), int(d->o.y-d->radius), int(d->o.z-d->height)),
+          bs(int(d->o.x+d->radius), int(d->o.y+d->radius), int(d->o.z+d->aboveeye));
+-    bs.add(1);  // guard space for rounding errors
++    bo.sub(1); bs.add(1);  // guard space for rounding errors
+     return octacollide(d, dir, cutoff, bo, bs) || (playercol && plcollide(d, dir, insideplayercol));
+ }
+ 
